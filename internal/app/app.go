@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"reflect"
 
-	. "go-service/internal/usecase/user"
+	. "go-service/internal/user"
 )
 
 type ApplicationContext struct {
