@@ -1,8 +1,6 @@
 package user
 
-import (
-	"context"
-)
+import "context"
 
 type UserService interface {
 	All(ctx context.Context) (*[]User, error)
