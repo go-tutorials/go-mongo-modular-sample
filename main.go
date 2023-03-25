@@ -2,9 +2,8 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/core-go/config"
-	sv "github.com/core-go/core"
+	"github.com/core-go/core"
 	"github.com/core-go/log"
 	mid "github.com/core-go/log/middleware"
 	"github.com/gorilla/mux"
@@ -28,13 +27,14 @@ func main() {
 	}
 	r.Use(mid.Recover(log.PanicMsg))
 
-	err = app.Route(context.Background(), r, conf)
+	ctx := context.Background()
+	err = app.Route(ctx, r, conf)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(sv.ServerInfo(conf.Server))
-	server := sv.CreateServer(conf.Server, r)
+	log.Info(ctx, core.ServerInfo(conf.Server))
+	server := core.CreateServer(conf.Server, r)
 	if err = server.ListenAndServe(); err != nil {
-		fmt.Println(err.Error())
+		log.Error(ctx, err.Error())
 	}
 }
