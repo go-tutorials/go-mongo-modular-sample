@@ -6,16 +6,14 @@ go run main.go
 ```
 
 ## Architecture
-### Architecture
-![Architecture](https://camo.githubusercontent.com/c17d4dfaab39cf7223f7775c9e973bb936e4169e8bd0011659e83cec755c8f26/68747470733a2f2f63646e2d696d616765732d312e6d656469756d2e636f6d2f6d61782f3830302f312a42526b437272622d5f417637395167737142556b48672e706e67)
+### Simple Layer Architecture
+![Layer Architecture](https://cdn-images-1.medium.com/max/800/1*JDYTlK00yg0IlUjZ9-sp7Q.png)
 
-### Architecture with standard features: config, health check, logging, middleware log tracing
-![Architecture with standard features: config, health check, logging, middleware log tracing](https://camo.githubusercontent.com/bd77867d332213b6d54d80b19f46c3dd0f1b8e0b9bb155f8ff502d9fc3bdcded/68747470733a2f2f63646e2d696d616765732d312e6d656469756d2e636f6d2f6d61782f3830302f312a476d306479704c7559615077474d38557a727a5637772e706e67)
+### Layer Architecture with full features
+![Layer Architecture with standard features: config, health check, logging, middleware log tracing](https://cdn-images-1.medium.com/max/800/1*8UjJSv_tW0xBKFXKZu86MA.png)
 #### [core-go/search](https://github.com/core-go/search)
 - Build the search model at http handler
-- Build dynamic SQL for search
-  - Build SQL for paging by page index (page) and page size (limit)
-  - Build SQL to count total of records
+- Build dynamic filter for mongo search
 ### Search users: Support both GET and POST 
 #### POST /users/search
 ##### *Request:* POST /users/search
@@ -191,14 +189,14 @@ We must solve 2 problems:
 #### Solutions for patch  
 1. At http handler layer, we use [core-go/core](https://github.com/core-go/core), to convert the user struct to map, to make sure we just update the fields we need to update
 ```go
-import sv "github.com/core-go/core"
+import "github.com/core-go/core"
 
 func (h *UserHandler) Patch(w http.ResponseWriter, r *http.Request) {
     var user User
     userType := reflect.TypeOf(user)
-    _, jsonMap := sv.BuildMapField(userType)
-    body, _ := sv.BuildMapAndStruct(r, &user)
-    json, er1 := sv.BodyToJson(r, user, body, ids, jsonMap, nil)
+    _, jsonMap := core.BuildMapField(userType)
+    body, _ := core.BuildMapAndStruct(r, &user)
+    json, er1 := core.BodyToJson(r, user, body, ids, jsonMap, nil)
 
     result, er2 := h.service.Patch(r.Context(), json)
     if er2 != nil {
@@ -233,9 +231,10 @@ DELETE /users/wolverine
 ```
 
 ## Common libraries
-- [core-go/health](https://github.com/core-go/health): include HealthHandler, HealthChecker, MongoHealthChecker
+- [core-go/health](https://github.com/core-go/health): include HealthHandler, HealthChecker, SqlHealthChecker
 - [core-go/config](https://github.com/core-go/config): to load the config file, and merge with other environments (SIT, UAT, ENV)
-- [core-go/log](https://github.com/core-go/log): log and log middleware
+- [core-go/log](https://github.com/core-go/log): logging
+- [core-go/middleware](https://github.com/core-go/log): middleware log tracing
 
 ### core-go/health
 To check if the service is available, refer to [core-go/health](https://github.com/core-go/health)

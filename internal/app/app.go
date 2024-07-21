@@ -2,44 +2,40 @@ package app
 
 import (
 	"context"
-	"github.com/core-go/health"
-	"github.com/core-go/log"
-	mgo "github.com/core-go/mongo"
-	"github.com/core-go/search"
-	mq "github.com/core-go/search/mongo"
+
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"reflect"
 
-	. "go-service/internal/user"
+	"github.com/core-go/health"
+	mgo "github.com/core-go/health/mongo"
+	"github.com/core-go/log/zap"
+
+	"go-service/internal/user"
 )
 
 type ApplicationContext struct {
 	Health *health.Handler
-	User   UserHandler
+	User   user.UserTransport
 }
 
-func NewApp(ctx context.Context, conf Config) (*ApplicationContext, error) {
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(conf.Mongo.Uri))
-	db := client.Database(conf.Mongo.Database)
+func NewApp(ctx context.Context, cfg Config) (*ApplicationContext, error) {
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.Mongo.Uri))
+	if err != nil {
+		return nil, err
+	}
+	db := client.Database(cfg.Mongo.Database)
+	logError := log.LogError
+
+	userTransport, err := user.NewUserTransport(db, logError)
 	if err != nil {
 		return nil, err
 	}
 
-	logError := log.LogError
-
-	userType := reflect.TypeOf(User{})
-	userQuery := mq.UseQuery(userType)
-	userSearchBuilder := mgo.NewSearchBuilder(db, "users", userQuery, search.GetSort)
-	userRepository := NewUserRepository(db)
-	userService := NewUserService(userRepository)
-	userHandler := NewUserHandler(userSearchBuilder.Search, userService, logError)
-
-	mongoChecker := mgo.NewHealthChecker(db)
+	mongoChecker := mgo.NewHealthChecker(client)
 	healthHandler := health.NewHandler(mongoChecker)
 
 	return &ApplicationContext{
 		Health: healthHandler,
-		User:   userHandler,
+		User:   userTransport,
 	}, nil
 }

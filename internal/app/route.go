@@ -2,12 +2,20 @@ package app
 
 import (
 	"context"
-	. "github.com/core-go/core"
+
 	"github.com/gorilla/mux"
 )
 
-func Route(ctx context.Context, r *mux.Router, conf Config) error {
-	app, err := NewApp(ctx, conf)
+const (
+	GET    = "GET"
+	POST   = "POST"
+	PUT    = "PUT"
+	PATCH  = "PATCH"
+	DELETE = "DELETE"
+)
+
+func Route(ctx context.Context, r *mux.Router, cfg Config) error {
+	app, err := NewApp(ctx, cfg)
 	if err != nil {
 		return err
 	}
@@ -15,6 +23,7 @@ func Route(ctx context.Context, r *mux.Router, conf Config) error {
 
 	user := "/users"
 	r.HandleFunc(user, app.User.All).Methods(GET)
+
 	r.HandleFunc(user+"/search", app.User.Search).Methods(GET, POST)
 	r.HandleFunc(user+"/{id}", app.User.Load).Methods(GET)
 	r.HandleFunc(user, app.User.Create).Methods(POST)
